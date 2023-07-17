@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.TestConstructor.AutowireMode;
+import qna.CannotDeleteException;
 
 @TestConstructor(autowireMode = AutowireMode.ALL)
 @DataJpaTest
@@ -83,12 +84,12 @@ class AnswerRepositoryTest {
 
     @DisplayName("답변의 삭제 여부 변경을 감지해 갱신한다.")
     @Test
-    void updateDeleted() {
+    void updateDeleted() throws CannotDeleteException {
         // given
         final Answer saved = answerRepository.save(ANSWER);
 
         // when
-        saved.setDeleted(true);
+        saved.deleteBy(saved.getWriter());
 
         // then
         final Answer updated = answerRepository.findById(saved.getId()).get();

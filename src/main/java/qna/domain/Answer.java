@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import qna.CannotDeleteException;
 import qna.NotFoundException;
 import qna.UnAuthorizedException;
 
@@ -54,52 +55,40 @@ public class Answer extends BaseEntity {
         this.contents = contents;
     }
 
-    public boolean isOwner(User writer) {
-        return this.writer.equals(writer);
-    }
-
     public void toQuestion(Question question) {
         this.question = question;
+    }
+
+    public DeleteHistory deleteBy(User loginUser) throws CannotDeleteException {
+        validateOwner(loginUser);
+        this.deleted = true;
+        return new DeleteHistory(ContentType.ANSWER, id, writer);
+    }
+
+    private void validateOwner(User loginUser) throws CannotDeleteException {
+        if (!isOwner(loginUser)) {
+            throw new CannotDeleteException("답변을 삭제할 권한이 없습니다.");
+        }
+    }
+
+    public boolean isOwner(User writer) {
+        return this.writer.equals(writer);
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public User getWriter() {
         return writer;
-    }
-
-    public void setWriter(final User writer) {
-        this.writer = writer;
     }
 
     public Question getQuestion() {
         return question;
     }
 
-    public void setQuestion(Question question) {
-        this.question = question;
-    }
-
-    public String getContents() {
-        return contents;
-    }
-
-    public void setContents(String contents) {
-        this.contents = contents;
-    }
-
     public boolean isDeleted() {
         return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
     }
 
     @Override

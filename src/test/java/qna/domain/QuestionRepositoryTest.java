@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.TestConstructor.AutowireMode;
+import qna.CannotDeleteException;
 
 @TestConstructor(autowireMode = AutowireMode.ALL)
 @DataJpaTest
@@ -19,6 +20,8 @@ class QuestionRepositoryTest {
 
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
+    private User USER_1;
+    private User USER_2;
     private Question QUESTION_1;
     private Question QUESTION_2;
 
@@ -29,10 +32,10 @@ class QuestionRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        final User user = userRepository.save(UserFixture.JAVAJIGI);
-        final User user2 = userRepository.save(UserFixture.SANJIGI);
-        QUESTION_1 = questionRepository.save(new Question("title", "contents").writeBy(user));
-        QUESTION_2 = questionRepository.save(new Question("title2", "contents2").writeBy(user2));
+        USER_1 = userRepository.save(UserFixture.JAVAJIGI);
+        USER_2 = userRepository.save(UserFixture.SANJIGI);
+        QUESTION_1 = questionRepository.save(new Question("title", "contents").writeBy(USER_1));
+        QUESTION_2 = questionRepository.save(new Question("title2", "contents2").writeBy(USER_2));
     }
 
     @DisplayName("질문을 저장한다.")
@@ -80,12 +83,12 @@ class QuestionRepositoryTest {
 
     @DisplayName("질문의 삭제 여부 변경을 감지해 갱신한다.")
     @Test
-    void updateDeleted() {
+    void updateDeleted() throws CannotDeleteException {
         // given
         final Question saved = questionRepository.save(QUESTION_1);
 
         // when
-        saved.setDeleted(true);
+        saved.deleteBy(USER_1);
 
         // then
         final Question updated = questionRepository.findById(saved.getId()).get();
